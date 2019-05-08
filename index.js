@@ -31,6 +31,23 @@ server.post('/api/users', (req, res) => {
   });
 });
 
+server.get('/api/users/:id', (req, res) =>{
+  const userId = req.params.id
+  db.findById(userId)
+    .then(user =>{
+        if(user){
+          db.findById(userId) .then( finduser =>{
+              res.status(201).json(finduser)
+          })
+        } else {
+          res.status( 404).json( {error : err, message :" The user with the secified ID does not exist" })
+        }
+      })
+    .catch(error =>{
+      res.status(500).json({ error : err, message: 'The user information could not be retrieved'})
+    })
+})
+
 
 server.listen(9090, () =>{
   console.log('listening on port 9090');
