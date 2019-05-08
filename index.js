@@ -2,31 +2,37 @@
 // Add Express
 const express = require('express');
 const db = require('./data/db.js')
+const morgan = require ('morgan');
 
 //Create express application using the express module
 
 const server = express();
+server.use(morgan('dev'))
 
 //middleware
 server.use(express.json())
 
 
 //READ
-server.get('/users', (req, res) => {
+server.get('/api/users', (req, res) => {
   db.find()
     .then(user => {
+      // this defaults 200 status
       res.status(200).json(user);
-    }).catch(({code, message}) => {
-    res.status(code).json({err: message});
+    })
+    .catch(({code, message}) => {
+    res.status(code).json({message: "It broke"});
   })
 })
 
 
 // CREATE
 server.post('/api/users', (req, res) => {
-  const newUser = req.body
-  console.log('req.body', req.body);
-  db.add(newUser)
+  const {name, bio } = req.body
+  if (!name) {
+    res.status(400).json({ message:"need to provide name"})
+  }
+  db.insert({name, bio})
     .then(addedUser => {
       // 201 status is added when new user
       res.status(201).json(addedUser)
@@ -37,16 +43,13 @@ server.post('/api/users', (req, res) => {
 });
 
 server.get('/api/users/:id', (req, res) =>{
-  const userId = req.params.id
-  db.findById(userId)
+  const { id } = req.params
+  db.findById(id)
     .then(user =>{
         if(user){
-          db.findById(userId)
-            .then( finduser =>{
-              res.status(201).json(finduser)
-          })
+          res.status(200).json(user);
         } else {
-          res.status( 404).json( {error : err, message :" The user with the secified ID does not exist" })
+          res.status( 404).json( {message :" The user with the secified ID does not exist" })
         }
       })
     .catch(({code, message}) => {
@@ -57,17 +60,13 @@ server.get('/api/users/:id', (req, res) =>{
 
 // DELETE
 server.delete('/api/users/:id', (req, res)=>{
-  const { id } = req.params.id
-
+  const { id } = req.params
   db.remove(id)
     .then(removedUser =>{
-      if(removedUser){
-        db.remove(UserId).then(
-          removeruser => {
-            res.status(201).json(removeruser)
-          })
-      }else{
-        res.status(404).json({ error: err, mesage : "USER DOESNT EXIST"})
+      if(removedUser) {
+        res.status(200).json(removedUser);
+      } else {
+        res.status(404).json({mesage : "USER DOESNT EXIST"})
       }
     })
     .catch(({code, message}) => {
@@ -75,7 +74,22 @@ server.delete('/api/users/:id', (req, res)=>{
     });
 });
 
+server.put('/api/users/:id', (req, res) => {
+  const {id} = req.params;
+  const {changes} = req.body;
 
+  db.update({id, changes})
+    .then(updatedUsers => {
+      if (updatedUsers) {
+        res.json(updatedUsers);
+      } else {
+        res.status(404).json({message: 'incorrect user'});
+      }
+    })
+    .catch(({code, message}) => {
+      res.status(code).json({err: message});
+    });
+});
 
 server.listen(9090, () =>{
   console.log('listening on port 9090');
