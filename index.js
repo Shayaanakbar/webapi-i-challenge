@@ -6,18 +6,23 @@ const db = require('./data/db.js')
 //Create express application using the express module
 
 const server = express();
+
+//middleware
 server.use(express.json())
 
+
+//READ
 server.get('/users', (req, res) => {
   db.find()
     .then(user => {
       res.status(200).json(user);
-    })
-    .catch(error =>{
-      res.status(500).json({error: err, message: 'whoops!'})
+    }).catch(({code, message}) => {
+    res.status(code).json({err: message});
   })
 })
 
+
+// CREATE
 server.post('/api/users', (req, res) => {
   const newUser = req.body
   console.log('req.body', req.body);
@@ -36,17 +41,40 @@ server.get('/api/users/:id', (req, res) =>{
   db.findById(userId)
     .then(user =>{
         if(user){
-          db.findById(userId) .then( finduser =>{
+          db.findById(userId)
+            .then( finduser =>{
               res.status(201).json(finduser)
           })
         } else {
           res.status( 404).json( {error : err, message :" The user with the secified ID does not exist" })
         }
       })
-    .catch(error =>{
-      res.status(500).json({ error : err, message: 'The user information could not be retrieved'})
+    .catch(({code, message}) => {
+      res.status(code).json({ err: message });
     })
 })
+
+
+// DELETE
+server.delete('/api/users/:id', (req, res)=>{
+  const { id } = req.params.id
+
+  db.remove(id)
+    .then(removedUser =>{
+      if(removedUser){
+        db.remove(UserId).then(
+          removeruser => {
+            res.status(201).json(removeruser)
+          })
+      }else{
+        res.status(404).json({ error: err, mesage : "USER DOESNT EXIST"})
+      }
+    })
+    .catch(({code, message}) => {
+      res.status(code).json({ err: message });
+    });
+});
+
 
 
 server.listen(9090, () =>{
