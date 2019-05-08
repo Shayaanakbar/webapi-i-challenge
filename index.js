@@ -76,9 +76,9 @@ server.delete('/api/users/:id', (req, res)=>{
 
 server.put('/api/users/:id', (req, res) => {
   const {id} = req.params;
-  const {changes} = req.body;
+  const changes = req.body;
 
-  db.update({id, changes})
+  db.update(id, changes)
     .then(updatedUsers => {
       if (updatedUsers) {
         res.json(updatedUsers);
